@@ -1,6 +1,8 @@
-Version 1/160118 of Advanced Dungeons and Dragons Characters by Nels Olsen begins here.
+Version 1/160122 of Advanced Dungeons and Dragons Characters by Nels Olsen begins here.
 
 "Provides rudimentary support for a party of old-school D&D characters."
+
+"original rules by Gary Gygax"
 
 Include Protagonists by Kevin Norris.
 Include Slotted Wearing and Wielding by Nels Olsen.
@@ -19,6 +21,9 @@ Section - Character Abilities
 
 Every person has a number called strength.
 The strength of a person is usually 10.
+
+Every person has a number called exceptional strength percentage.
+The exceptional strength percentage of a person is usually 0.
 
 Every person has a number called intelligence.
 The intelligence of a person is usually 10.
@@ -40,40 +45,23 @@ Section - Character Status
 Every person has a number called level.
 The level of a person is usually 0.
 
-Every person has a number called hit points.
-The hit points of a person is usually 5.
+Every person has a number called current hit points.
+The current hit points of a person is usually 5.
 
-Every person is either paralyzed or not paralyzed.
+Every person has a number called maximum hit points.
+The maximum hit points of a person is usually 5.
+
+A person can be paralyzed.
 A person is usually not paralyzed.
 
-Every person is either frightened or not frightened.
+A person can be frightened.
 A person is usually not frightened.
+
+A person can be awake or asleep.
+A person is usually awake.
 
 Every person is either sane or insane.
 A person is usually sane.
-
-To decide whether (P - a PC) is capable of following (this is the followers must be able and willing rule):
-	if the hit points of P is less than 1, decide no;
-	if P is paralyzed, decide no;
-	if P is frightened, decide no;
-	if P is insane, decide no;
-	decide yes.
-
-Check an actor going (this is the incapable followers can't go rule):
-	if the actor is capable of following, continue the action;
-	otherwise stop the action.
-
-Check an actor entering (this is the incapable followers can't enter rule):
-	if the actor is capable of following, continue the action;
-	otherwise stop the action.
-	
-Check an actor exiting (this is the incapable followers can't exit rule):
-	if the actor is capable of following, continue the action;
-	otherwise stop the action.
-
-Check an actor getting off (this is the incapable followers can't get off rule):
-	if the actor is capable of following, continue the action;
-	otherwise stop the action.
 
 Section - Character Races
 
@@ -136,24 +124,35 @@ To decide what weight is the maximum weight bearable by (P - a person):
 	[TODO: Use the D&D 1e rules]
 	decide on 80lb.
 
-Check an actor taking something (this is the can't bear weight beyond your strength limit rule):
+Check an actor taking something (this is the people can't pick up weight beyond their strength limit rule):
 	let item be the noun;
 	let P be the actor;
 	let B be the weight born by P;
 	let E be the effective weight of the item;
 	let M be the maximum weight bearable by P;
 	if B + E > M:
-		say "Taking [the item][if the number of things held by P is greater than 0] along with everything else worn and carried[end if] would be more weight than [P] can bear.";
+		say "Taking [the item][if the number of things held by P is greater than 0] along with everything else worn and carried[end if] would be more weight than [P] can bear." (A);
 		stop the action.
 
-Check an actor inserting something into something:
+[TODO: See if there's a way to define an independent rule taking parameters, then have this rule and the one above both invoke that, to avoid duplicating logic.]
+Check an actor giving something to someone (this is the people can't be given weight beyond their strength limit rule):
+	let item be the noun;
+	let P be the second noun;
+	let B be the weight born by P;
+	let E be the effective weight of the item;
+	let M be the maximum weight bearable by P;
+	if B + E > M:
+		say "Taking [the item][if the number of things held by P is greater than 0] along with everything else worn and carried[end if] would be more weight than [P] can bear." (A);
+		stop the action.
+
+Check an actor inserting something into something (this is the containers can't bear weight beyond their encumbrance limit rule):
 	let item be the noun;
 	let C be the second noun;
 	let B be the weight contained by C;
 	let E be the effective weight of the item;
 	let M be the encumbrance capacity of C;
 	if B + E > M:
-		say "[The C] [is-are]n't able to bear the weight of [the item][if the number of  things contained by C is greater than 0] along with everything else in [it-them].";
+		say "[The C] [is-are]n't able to bear the weight of [the item][if the number of  things contained by C is greater than 0] along with everything else in [it-them]." (A);
 		stop the action.
 
 Section - Adventuring Equipment
@@ -316,18 +315,6 @@ The printed name is "large metal shield".
 It weighs 15lb.
 The total blocks per round are 3.
 Understand "large metal shield" as large-metal-shield.
-
-To decide what number is the AC of (P - a person) (this is armor class determining): 
-	let running-AC be 10;
-	repeat with item running through the list of armor worn by P:
-		now running-AC is running-AC - (the base defense bonus of item);
-	repeat with item running through the list of wearable-slot-fillers worn by P:
-		now running-AC is running-AC - (the enchantment bonus of item);
-	decide on running-AC.
-
-To say the AC of (P - a person):
-	let X be the AC of P;
-	say X.
 
 Section - Ammunition
 
@@ -502,35 +489,134 @@ Understand "nunchucks" as nunchucks.
 
 Chapter - Combat
 
+When play begins (this is the initialize current hit points to maximum rule):
+	repeat with P running through the list of people:
+		now the current hit points of P are the maximum hit points of P.
+
+To decide what number is the AC of (P - a person): 
+	let running-AC be 10;
+	repeat with item running through the list of armor worn by P:
+		now running-AC is running-AC - (the base defense bonus of item);
+	repeat with item running through the list of wearable-slot-fillers worn by P:
+		now running-AC is running-AC - (the enchantment bonus of item);
+	decide on running-AC.
+
+To decide what number is the death threshold of (P - a person):
+	decide on (0 - the constitution of P).
+
+To decide whether (P - a person) is dying:
+	let hp be the current hit points of P;
+	let death-hp be the death threshold of P;
+	if hp < 1 and hp > death-hp, decide yes;
+	otherwise decide no.
+
+To decide whether (P - a person) is dead:
+	let hp be the current hit points of P;
+	let death-hp be the death threshold of P;
+	if hp <= death-hp, decide yes;
+	otherwise decide no.
+
+To decide whether (P - a  person) is conscious:
+	if P is asleep, decide no;
+	if P is dying, decide no;
+	if P is dead, decide no;
+	otherwise decide yes.
+
+Chapter - Adventuring
+
+Section - Following
+
+To decide whether (P - a PC) is capable of following:
+	if the current hit points of P < 1, decide no;
+	if P is paralyzed, decide no;
+	if P is frightened, decide no;
+	if P is insane, decide no;
+	otherwise decide yes.
+
+Check an actor going (this is the incapable followers can't go rule):
+	if the actor is capable of following, continue the action;
+	otherwise stop the action.
+
+Check an actor entering (this is the incapable followers can't enter rule):
+	if the actor is capable of following, continue the action;
+	otherwise stop the action.
+	
+Check an actor exiting (this is the incapable followers can't exit rule):
+	if the actor is capable of following, continue the action;
+	otherwise stop the action.
+
+Check an actor getting off (this is the incapable followers can't get off rule):
+	if the actor is capable of following, continue the action;
+	otherwise stop the action.
+
+Section - Taking Items from Other PCs
+
+To decide what person is the carrier of (T - a thing) (this is the carrier determination rule): [logic borrowed from Standard Rule can't take peoples possessions]
+	let the owner be the not-counting-parts holder of the noun;
+	while the owner is not nothing:
+		if the owner is a person:
+			decide on the owner;
+		let the owner be the not-counting-parts holder of the owner;
+	decide on nothing.
+
+To decide whether (P - a person) is possessive of carried belongings (this is the unfriendly people don't like lending things rule):
+	if P is dying, decide no;
+	if P is dead, decide no;
+	if P is playable, decide no;
+	otherwise decide yes.
+
+To decide whether (P - a person) is not possessive of carried belongings (this is the friendly people don't mind lending things rule):
+	if P is possessive of carried belongings, decide no;
+	otherwise decide yes.
+
+The can take possessions from playable characters rule substitutes for the can't take people's possessions rule when the carrier of the noun is  not possessive of carried belongings.
+
+This is the can take possessions from playable characters rule:
+	continue the action.
+
+Section - Requesting Inventory from Other PCs
+
 Chapter - Character Sheets
 
 Characterizing is an action out of world applying to one thing.
 
 Understand "characterize [something]" as characterizing. 
 
-Check characterizing:
+Check characterizing (this is the can only see character sheets of visible PCs rule):
 	let P be the noun;
 	if P is not a person:
-		say "Only people have character statistics.";
+		say "Only people have character statistics." (A);
+		stop the action;
+	if P is not visible:
+		say "You don't see [P] anywhere." (B);
 		stop the action;
 	if P is not a PC:
-		say "You aren't privy to the character statistics of someone not in your party.";
+		say "You aren't privy to the character statistics of someone not in your party." (C);
 		stop the action.
 
-Report characterizing:
+Report characterizing (this is the report a PC's character sheet rule):
 	let P be the noun;
 	say the character statistics of P.
 
-To say the character statistics of (P - a person):
+To decide what text is the printed strength of (P - a person) (this is the printed strength formatting rule):
+	let str be the strength of P;
+	if str is 18:
+		let exStr be the exceptional strength percentage of P;
+		if exStr is 100, let exStr be 0;
+		decide on "[str]/[if exStr < 10]0[end if][exStr]";
+	otherwise:
+		decide on "[str]".
+
+To say the character statistics of (P - a person) (this is the say a PC's character sheet rule):
 	say "[printed name of P]: level [level of P] [race of P] [class of P][line break]
-STR: [strength of P][line break]
+STR: [printed strength of P][line break]
 INT: [intelligence of P][line break]
 WIS: [wisdom of P][line break]
 DEX: [dexterity of P][line break]
 CON: [constitution of P][line break]
 CHA: [charisma of P][line break]
-HP: [hit points of P][line break]
 AC: [AC of P][line break]
+HP: [current hit points of P] of [maximum hit points of P] [if P is dying](dying)[end if][if P is dead] (dead)[end if][line break]
 Enc: [weight born by P] of [maximum weight bearable by P][line break]
 ".
 
